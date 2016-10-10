@@ -1,0 +1,60 @@
+Clock consistency implementation in java
+    --project 1 in CSCI 53700, Distributed System in IUPUI
+
+Author:Feng Li
+Time: Oct 1st, 2016
+
+
+Discription:
+    In distributed systems, there may be clock drifts among cocurrent processes, thus resulting ininconsistent timing schema. However with adjustments to the logic clocks during message passing between processes, this problem can be effectively addressed
+
+
+Make:
+    run 'make' in the package root directory
+
+quick run:
+    this will generate all the tasks and store the results in "results/summary"
+    AFTER MAKE: 
+        chmod +x ./run.sh
+        ./run.sh
+
+Output:
+    results will be stored in 
+	results/summary/Counters_useSyn_${syn}_eventRange_${range}t_all.txt
+	
+    where:
+        $syn: whether use the synchronization method or not: true or false
+        $range: the eventTypeRange:integer no less than 3
+
+    meaning:
+        Each column is corresponding to 1 process, where the value of each row represent the time stamps of sequence of events
+	
+
+Log files:
+    I also maintain a log file in logs/useSyn_${syn}_eventRange_${range}.log
+    it shows more detailed information of the all events in the system
+
+--------------------------------------------------------------------------------------------
+More detailed Information
+example command(this is the default if u just run without any parameters, it should be run in project root directory):
+
+    java Main
+
+advanced command line format
+    java Main useSyn eventTypeRange
+
+    useSyn: (default: true)
+        can be either 'true' or 'false'
+        if set to 'true', there logic clocks will be adjusted when receiving messages
+        if set to 'false', no adjustments will be made when receiving messages
+
+    eventTypeRange:(default: 6, this value should be no less than 3)
+        this controls the probalbility of receiving event, which is
+             (eventTypeRange-2)/ eventTypeRange
+        Image this is the weight for all the events, both 'sending' and 'internal' event have a weight of 1, and 'receiving' event will have the remaining weight of eventTypeRange-2
+
+example for advanced command:
+    java Main false 6
+    in this case, no synchronziation measure is taken and the probability of 'receiving' event is (6-2)/6 = 2/3
+
+
