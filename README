@@ -1,6 +1,10 @@
 Clock consistency implementation in java
     --project 1 in CSCI 53700, Distributed System in IUPUI
 
+references:
+ 1. http://www.javatpoint.com/RMI
+ 2. Using java-rmi in p2p applications
+    http://isp.vsi.ru/library/Java/JExpSol/ch16.htm#CreatingPeertoPeerRMIApplications.
 Author:Feng Li
 Time: Oct 1st, 2016
 

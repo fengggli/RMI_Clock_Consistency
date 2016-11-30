@@ -1,0 +1,3 @@
+grant codeBase "file:/home/arvnair/NairA4Example/javarmi/"{
+	permission java.security.AllPermission;
+};

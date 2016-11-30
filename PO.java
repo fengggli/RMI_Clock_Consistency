@@ -21,7 +21,7 @@ public class PO implements  Runnable{
     // message queue
     public BlockingQueue<Integer> mQueue = new LinkedBlockingQueue<Integer>();
 
-    // each event can advance its count with 1 or to
+    // each event can advance its count with 1 or 2 2
     public double incRate = 0.5;
 
 
