@@ -1,20 +1,23 @@
 Clock consistency implementation in java
-    --project 1 in CSCI 53700, Distributed System in IUPUI
+    --project 4 in CSCI 53700, Distributed System in IUPUI
 
 references:
  1. http://www.javatpoint.com/RMI
  2. Using java-rmi in p2p applications
     http://isp.vsi.ru/library/Java/JExpSol/ch16.htm#CreatingPeertoPeerRMIApplications.
+
 Author:Feng Li
-Time: Oct 1st, 2016
+Time: Nov 24st, 2016
 
 
-Discription:
+Description:
     In distributed systems, there may be clock drifts among cocurrent processes, thus resulting ininconsistent timing schema. However with adjustments to the logic clocks during message passing between processes, this problem can be effectively addressed
 
 
 Make:
     run 'make' in the package root directory
+
+
 
 quick run:
     this will generate all the tasks and store the results in "results/summary"

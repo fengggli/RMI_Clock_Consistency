@@ -1,0 +1,3 @@
+grant codeBase "file:/home/lifen/Workspace/Feng_DS4/RMI_Clock_Consistency/references/javarmi/"{
+    permission java.security.AllPermission;
+};

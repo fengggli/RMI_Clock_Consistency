@@ -6,7 +6,9 @@ JC = javac
 
 CLASSES = \
         PO.java \
-        Main.java 
+        Main.java \
+		PeerInterface.java
+		
 
 default: classes
 	mkdir -pv results/summary

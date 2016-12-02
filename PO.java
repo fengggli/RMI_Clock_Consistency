@@ -1,22 +1,26 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.InetAddress;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by lifeng on 9/30/16.
  * poject object
  */
-public class PO implements  Runnable{
+public class PO extends UnicastRemoteObject implements PeerInterface {
     // each process maintains a id and counter
     private int poId;
     private int logicClock;
 
-    Vector<Integer> listClock = new Vector<>();
-    // 1- 2/eventTypeRange will be the ratio of receive
+    Random randomGen;
+
 
     // message queue
     public BlockingQueue<Integer> mQueue = new LinkedBlockingQueue<Integer>();
@@ -27,38 +31,53 @@ public class PO implements  Runnable{
 
     // information of timing and how many pos
     //static int timeStep = 1;
-    static int numPO;
+
+    // false
+    static  int numPO=0;
     // whether use Synchronizing method or not
     static boolean useSyn;
     static int eventTypeRange;
     static int eventNumber;
-    static PrintWriter logOut;
+    PrintWriter logOut;
 
-    PO[] allPOs;
+
+    Map<Integer, PeerInterface>  allPeers =  new HashMap<Integer, PeerInterface>();
     // constructor
-    public PO(int id){
+    public PO(int id) throws RemoteException{
         poId = id;
+        randomGen = new Random();
+
         logicClock = 0;
-        System.out.println("PO " + id + "is created");
-
+        System.out.println("PO " + poId + " of "+ numPO +" is created");
     }
 
-    public void setObjectsArray(PO[] POs){
-        allPOs = POs;
-    }
 
-    private void threadMessage(String message){
-        String threadName = Thread.currentThread().getName();
-        String moreMessage = String.format("%s: time changed to %d \t after \t %s \n", threadName, logicClock, message);
+    private void NodeMessage(String message){
+        /*
+        String nodeName="null";
+        try {
+            nodeName = InetAddress.getLocalHost().getHostName();
+        }catch (Exception e){
+            System.out.println("error when getting hostname");
+        }
+        */
+
+        String moreMessage = String.format("%s: time changed to %d \t after \t %s \n", poId, logicClock, message);
         logOut.print(moreMessage);
+        //System.out.print(moreMessage);
     }
 
     // this simulate different processes with have different counter increment
     // how long should we wait between event
     private void increaseClock(){
-        int increment = ThreadLocalRandom.current().nextInt(0,100);
+
+
+        // for debug only
+        //logicClock += 1;
+
 
         // each time the counter can increase by 1 or 2
+        int increment = randomGen.nextInt(100);
         if(increment < 100*incRate){
             logicClock += 1;
         }
@@ -68,9 +87,26 @@ public class PO implements  Runnable{
 
     }
 
+    /*
+     * this is a remote call, how should local PO respose when another PO sends its timestep
+     * this timestep should be add into queue
+     */
+    public int updateTime(int timestamp){
+        // this should update the incoming message queue in the receiver
+        try {
+            mQueue.put(timestamp);
+        }catch (InterruptedException e){
+            NodeMessage("interrupted when add incoming message into");
+            return -1;
+        }
+        //NodeMessage("A timestep of " + timestamp + " is added into the MS queue ");
+
+        return  1;
+    }
+
     private void internalEvent(){
         increaseClock();
-        threadMessage("internal event!");
+        NodeMessage("internal event!");
     }
 
     private void sendEvent(int m, int targetId){
@@ -78,20 +114,26 @@ public class PO implements  Runnable{
 
         // advance the counter
 
-        assert targetId!=poId;
+        //assert targetId!=poId;
+        //System.out.println("try to send to " + targetId);
         try {
-            allPOs[targetId].mQueue.put(logicClock);
-        }catch (InterruptedException e){
-            System.err.println(Thread.currentThread().getName() + ":interrupted when sending");
+
+            //allPOs[targetId].mQueue.put(logicClock);
+            // instead we make a remote call
+            allPeers.get(targetId).updateTime(logicClock);
+
+
+        }catch (RemoteException e){
+            NodeMessage("error when send logic lock to PO." + targetId);
         }
         increaseClock();
-        threadMessage("send LogicNo = " + m  +" to thread"  + targetId);
+        NodeMessage("send LogicNo = " + m  +" to PO."  + targetId);
     }
 
     private void receiveEvent() {
         increaseClock();
         // get a message from queue
-        int byzantine = ThreadLocalRandom.current().nextInt(0,50);
+        int byzantine = randomGen.nextInt(50);
         if(byzantine < 48) {
 
             if (!mQueue.isEmpty()) {
@@ -101,49 +143,100 @@ public class PO implements  Runnable{
                 // two experiment sets
                 if (receivedTimeStep >= logicClock && useSyn == true) {
                         logicClock = receivedTimeStep + 1;
-                        threadMessage("receive  a message, and adjust current time");
+                        NodeMessage("receive  a timestep"+ receivedTimeStep+ "and adjust current time-------");
                 } else {
-                    threadMessage("receive  a message, but its out of date or synchronizing is not used in this setting");
+                    NodeMessage("receive timestep" + receivedTimeStep +", but its out of date or synchronizing is not used in this setting-------");
                 }
 
             } else {
-                threadMessage("receive  a message, but no message in the queue");
-
-
+                NodeMessage("receive  a message, but no message in the queue");
             }
         }
         else if(byzantine == 48){
-            threadMessage("byzantine error type 1: not update logic clock");
+            NodeMessage("byzantine error type 1: not update logic clock");
         }
         else if(byzantine == 49){
-            threadMessage("byzantine error type 2: advance logic clock by 100");
             logicClock += 500;
+            NodeMessage("byzantine error type 2: advance logic clock by 500");
         }
     }
 
-    public void run(){
-        threadMessage("thread started");
+
+
+    public void startPO() throws IOException{
+        NodeMessage("PO started");
         //ThreadLocalRandom.current().setSeed(poId);
         int i;
-        PrintWriter myout = null;
         String outPath = "results/Counters_useSyn_" + PO.useSyn + "_eventRange_"+ PO.eventTypeRange + "t_"+ poId +".txt";
 
-        try {
-            myout = new PrintWriter(new FileWriter(outPath));
-        }catch (IOException e) {}
+        PrintWriter myOut = new PrintWriter(new FileWriter(outPath));
 
+
+        /* prepare all the registries
+         *
+         */
+        String    stubName = "//localhost:1993/PO" + poId;
+
+        PeerInterface pint = this;
+
+
+        try {
+            Naming.rebind(stubName, pint);
+        }catch (Exception e){
+            System.out.print(e);
+        }
+
+        System.out.println("stub " + stubName + "is construct");
+
+
+        /*
+         * also bind other POs
+         */
+
+        String peerName;
+
+        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Ready to connect to all the peers?(y/n)");
+        String ans=br.readLine();
+        String yes="y";
+
+        if(ans.equalsIgnoreCase(yes)) {
+            for (i = 0; i < numPO; i++) {
+                if (i != poId) {
+                    peerName = "//localhost:1993/PO" + i;
+
+                    try {
+
+                        PeerInterface pi = (PeerInterface) Naming.lookup(peerName);
+                        if(pi== null){
+                            System.out.println("errrrrr");
+                        }
+                        allPeers.put(i, pi);
+                    } catch (Exception e) {
+                        System.out.println("error when look up " + i + "th peer with entry:" + peerName);
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+
+                    NodeMessage("PO No." + i + " is connected");
+
+                }
+            }
+        }
+
+        // create a random generattor
         for(i = 0; i < eventNumber; i ++){
 
             try {
 
-                Thread.sleep(1);
+                Thread.sleep(200);
             }
             catch (InterruptedException e){
-                threadMessage("interrupted by user!");
+                NodeMessage("interrupted by user!");
                 return;
             }
 
-            int eventType = ThreadLocalRandom.current().nextInt(0,eventTypeRange);
+            int eventType = randomGen.nextInt(eventTypeRange);
 
             if(eventType == 0){
                 internalEvent();
@@ -152,7 +245,7 @@ public class PO implements  Runnable{
                 int target = -1;
                 // do not sent message to itself
                 do{
-                    target = ThreadLocalRandom.current().nextInt(0, numPO);
+                    target = randomGen.nextInt(2);
                 }while (target == poId);
 
                 sendEvent(logicClock, target);
@@ -160,12 +253,10 @@ public class PO implements  Runnable{
             else{
                 receiveEvent();
             }
-            myout.println(new Integer(logicClock).toString());
+            myOut.println(new Integer(logicClock).toString());
         }
-        myout.close();
-
+        myOut.close();
         // store all the counter series
-
     }
 }
 
