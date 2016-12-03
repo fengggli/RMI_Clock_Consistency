@@ -7,7 +7,7 @@ public class Main {
 	// write your code here
         int numPO=0;
         int poId=-1;
-        int eventNumber = 10000;
+        int eventNumber = 50000;
 
 
         // key experiment settings
@@ -39,6 +39,11 @@ public class Main {
             }
         }
         PO.eventNumber = eventNumber;
+
+        if(eventNumber < 10){
+            System.out.println("event should be more than 10");
+            System.exit(-1);
+        }
 
 
         PrintWriter logOut = null;

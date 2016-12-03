@@ -228,11 +228,14 @@ public class PO extends UnicastRemoteObject implements PeerInterface {
         System.out.println("Now start"+ eventNumber+" events, please wait!");
 
         // show the progress
-        int percent_count = eventNumber/20;
+        int percent_count = eventNumber/10;
+
+        // realsystem time
+        long realTime;
 
         for(i = 0; i < eventNumber; i ++){
             if(i%percent_count ==0){
-                System.out.println("%" + (i/percent_count)*5 + " finished");
+                System.out.println("%" + (i/percent_count)*10 + " finished");
             }
 
             try {
@@ -261,6 +264,9 @@ public class PO extends UnicastRemoteObject implements PeerInterface {
             else{
                 receiveEvent();
             }
+
+            realTime=System.currentTimeMillis();
+            //myOut.println(realTime + "\t"+new Integer(logicClock).toString());
             myOut.println(new Integer(logicClock).toString());
         }
         myOut.close();
