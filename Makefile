@@ -11,7 +11,7 @@ CLASSES = \
 		
 
 default: classes
-	mkdir -pv results/summary
+	mkdir -pv results
 	mkdir -p logs
 
 classes: $(CLASSES:.java=.class)
@@ -20,3 +20,4 @@ clean:
 	$(RM) *.class
 	$(RM) -rf results/*
 	$(RM) logs/*
+

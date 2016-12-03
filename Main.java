@@ -7,7 +7,7 @@ public class Main {
 	// write your code here
         int numPO=0;
         int poId=-1;
-        int eventNumber = 10;
+        int eventNumber = 10000;
 
 
         // key experiment settings

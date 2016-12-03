@@ -13,21 +13,35 @@ Time: Nov 24st, 2016
 Description:
     In distributed systems, there may be clock drifts among cocurrent processes, thus resulting ininconsistent timing schema. However with adjustments to the logic clocks during message passing between processes, this problem can be effectively addressed
 
-
-Make:
+1. Make:
     run 'make' in the package root directory
 
+2. chmod +x *.sh
+    give permission to all shell scripts
+
+3. on four machines, type ./rmiregistry.sh to start registry
+
+4. start in machine 1~ machine 4:
+    ('4' means there are four processes in total, and the 0~3 are the id of different processes,
+        read the 'More detailed Information' Section for more details)
+    Machine 1:  java -Djava.security.policy=policy Main 4 0
+    Machine 2:  java -Djava.security.policy=policy Main 4 1
+    Machine 3:  java -Djava.security.policy=policy Main 4 2
+    Machine 2:  java -Djava.security.policy=policy Main 4 3
+
+5. In each machine you will get a prompt of:
+        "Ready to connect to all the peers?(y/n)"
+   Make sure you have already start all the processes in step 4, then in each machine, type: y to start counting
+
+6. In each machine, after the program finish all the iterations, it will ask you
+        "Ready to quit?(y/n)"
+    Make sure all the four machines give this prompt, then you can type 'y' to quit the process in each machine
 
 
-quick run:
-    this will generate all the tasks and store the results in "results/summary"
-    AFTER MAKE: 
-        chmod +x ./run.sh
-        ./run.sh
 
 Output:
     results will be stored in 
-	results/summary/Counters_useSyn_${syn}_eventRange_${range}t_all.txt
+	results/Counters_useSyn_${syn}_eventRange_${range}t_all.txt
 	
     where:
         $syn: whether use the synchronization method or not: true or false
@@ -43,12 +57,19 @@ Log files:
 
 --------------------------------------------------------------------------------------------
 More detailed Information
-example command(this is the default if u just run without any parameters, it should be run in project root directory):
 
-    java Main
+Basic command line format
+    java -Djava.security.policy=policy Main numPO poID
+
+    numPO:
+         is how many POs in total, required
+    poID:
+         is the current PO id, must between 0~numPO-1
+
 
 advanced command line format
-    java Main useSyn eventTypeRange
+
+    java -Djava.security.policy=policy Main numPO poID useSyn eventTypeRange
 
     useSyn: (default: true)
         can be either 'true' or 'false'
@@ -61,7 +82,11 @@ advanced command line format
         Image this is the weight for all the events, both 'sending' and 'internal' event have a weight of 1, and 'receiving' event will have the remaining weight of eventTypeRange-2
 
 example for advanced command:
-    java Main false 6
-    in this case, no synchronziation measure is taken and the probability of 'receiving' event is (6-2)/6 = 2/3
 
+    java -Djava.security.policy=policy Main 4 0 false 6
+    in this case,this is the No.0 PO of all the four PO, no synchronziation measure is taken(baseline) and the probability of 'receiving' event is (6-2)/6 = 2/3
+
+Change eventNumber
+    you can decide how many events for each PO. change the 10th line:
+        int eventNumber = 10000;
 

@@ -175,7 +175,7 @@ public class PO extends UnicastRemoteObject implements PeerInterface {
         /* prepare all the registries
          *
          */
-        String    stubName = "//localhost:1993/PO" + poId;
+        String    stubName = "//in-csci-rrpc0"+ (poId+1) +".cs.iupui.edu:1993/PO" + poId;
 
         PeerInterface pint = this;
 
@@ -203,7 +203,7 @@ public class PO extends UnicastRemoteObject implements PeerInterface {
         if(ans.equalsIgnoreCase(yes)) {
             for (i = 0; i < numPO; i++) {
                 if (i != poId) {
-                    peerName = "//localhost:1993/PO" + i;
+                    peerName = "//in-csci-rrpc0"+ (poId+1) +".cs.iupui.edu:1993/PO" + poId;
 
                     try {
 
@@ -225,11 +225,19 @@ public class PO extends UnicastRemoteObject implements PeerInterface {
         }
 
         // create a random generattor
+        System.out.println("Now start"+ eventNumber+" events, please wait!");
+
+        // show the progress
+        int percent_count = eventNumber/20;
+
         for(i = 0; i < eventNumber; i ++){
+            if(i%percent_count ==0){
+                System.out.println("%" + (i/percent_count)*5 + " finished");
+            }
 
             try {
 
-                Thread.sleep(200);
+                Thread.sleep(1);
             }
             catch (InterruptedException e){
                 NodeMessage("interrupted by user!");
